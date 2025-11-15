@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>StringsTable</key>
+	<string>Root</string>
+	<key>PreferenceSpecifiers</key>
+	<array>
+		<!-- 1. AI / Model -->
+		<dict>
+			<key>Type</key><string>PSGroupSpecifier</string>
+			<key>Title</key><string>AI / Model</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSMultiValueSpecifier</string>
+			<key>Title</key><string>Default AI model</string>
+			<key>Key</key><string>ai_model_default</string>
+			<key>DefaultValue</key><string>gpt-5</string>
+			<key>Titles</key>
+			<array>
+				<string>GPT-5</string>
+				<string>Claude Sonnet 4.5</string>
+				<string>Gemini 2.5 Pro</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<string>gpt-5</string>
+				<string>claude-sonnet-4.5</string>
+				<string>gemini-2.5-pro</string>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Stream AI responses</string>
+			<key>Key</key><string>ai_streaming_enabled</string>
+			<key>DefaultValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSSliderSpecifier</string>
+			<key>Title</key><string>Max response tokens</string>
+			<key>Key</key><string>ai_max_tokens</string>
+			<key>DefaultValue</key><real>4096</real>
+			<key>MinimumValue</key><real>256</real>
+			<key>MaximumValue</key><real>32768</real>
+			<key>ShowValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSSliderSpecifier</string>
+			<key>Title</key><string>Creativity (temperature)</string>
+			<key>Key</key><string>ai_temperature</string>
+			<key>DefaultValue</key><real>0.2</real>
+			<key>MinimumValue</key><real>0.0</real>
+			<key>MaximumValue</key><real>2.0</real>
+			<key>ShowValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSSliderSpecifier</string>
+			<key>Title</key><string>Nucleus sampling (top_p)</string>
+			<key>Key</key><string>ai_top_p</string>
+			<key>DefaultValue</key><real>1.0</real>
+			<key>MinimumValue</key><real>0.0</real>
+			<key>MaximumValue</key><real>1.0</real>
+			<key>ShowValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Custom system prompt</string>
+			<key>Key</key><string>ai_system_prompt</string>
+			<key>DefaultValue</key><string></string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Auto-attach file context</string>
+			<key>Key</key><string>ai_auto_attach_context</string>
+			<key>DefaultValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Offer test generation</string>
+			<key>Key</key><string>ai_auto_generate_tests</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Auto-format after insert</string>
+			<key>Key</key><string>ai_auto_format_code</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+
+		<!-- 2. Context Engine -->
+		<dict>
+			<key>Type</key><string>PSGroupSpecifier</string>
+			<key>Title</key><string>Context Engine</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Index project on open</string>
+			<key>Key</key><string>ctx_index_on_open</string>
+			<key>DefaultValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Max file size (KB)</string>
+			<key>Key</key><string>ctx_max_file_size_kb</string>
+			<key>DefaultValue</key><string>512</string>
+			<key>KeyboardType</key><string>NumbersAndPunctuation</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Folders to ignore (comma)</string>
+			<key>Key</key><string>ctx_skip_folders</string>
+			<key>DefaultValue</key><string>node_modules,.git,build</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Extract Swift/Obj-C symbols</string>
+			<key>Key</key><string>ctx_symbol_extraction</string>
+			<key>DefaultValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Semantic ranking</string>
+			<key>Key</key><string>ctx_semantic_ranking</string>
+			<key>DefaultValue</key><true/>
+		</dict>
+
+		<!-- 3. Shell / Tool Security -->
+		<dict>
+			<key>Type</key><string>PSGroupSpecifier</string>
+			<key>Title</key><string>Shell / Tool Security</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Allow shell commands</string>
+			<key>Key</key><string>ai_shell_enabled</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Shell whitelist (comma)</string>
+			<key>Key</key><string>ai_shell_whitelist</string>
+			<key>DefaultValue</key><string></string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Shell blacklist (comma)</string>
+			<key>Key</key><string>ai_shell_blacklist</string>
+			<key>DefaultValue</key><string>rm,sudo</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Confirm dangerous cmds</string>
+			<key>Key</key><string>ai_shell_confirm_destructive</string>
+			<key>DefaultValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Shell timeout (s)</string>
+			<key>Key</key><string>ai_shell_max_runtime</string>
+			<key>DefaultValue</key><string>30</string>
+			<key>KeyboardType</key><string>NumbersAndPunctuation</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Max output (bytes)</string>
+			<key>Key</key><string>ai_shell_max_output</string>
+			<key>DefaultValue</key><string>2048</string>
+			<key>KeyboardType</key><string>NumbersAndPunctuation</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Allow shell network</string>
+			<key>Key</key><string>ai_shell_network_allowed</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Enable Docker tools</string>
+			<key>Key</key><string>ai_docker_enabled</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Enable Cloud deploy</string>
+			<key>Key</key><string>ai_cloud_deploy_enabled</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+
+		<!-- 4. Editor / UI -->
+		<dict>
+			<key>Type</key><string>PSGroupSpecifier</string>
+			<key>Title</key><string>Editor / UI</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Tab width</string>
+			<key>Key</key><string>editor_tab_size</string>
+			<key>DefaultValue</key><string>4</string>
+			<key>KeyboardType</key><string>NumbersAndPunctuation</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Soft wrap</string>
+			<key>Key</key><string>editor_wrap_lines</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Show invisibles</string>
+			<key>Key</key><string>editor_show_invisibles</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Show minimap</string>
+			<key>Key</key><string>editor_minimap_enabled</string>
+			<key>DefaultValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Font size (pt)</string>
+			<key>Key</key><string>editor_font_size</string>
+			<key>DefaultValue</key><string>15</string>
+			<key>KeyboardType</key><string>NumbersAndPunctuation</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Font family</string>
+			<key>Key</key><string>editor_font_family</string>
+			<key>DefaultValue</key><string>SF Mono</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSMultiValueSpecifier</string>
+			<key>Title</key><string>Theme</string>
+			<key>Key</key><string>editor_theme</string>
+			<key>DefaultValue</key><string>prism-dark</string>
+			<key>Titles</key>
+			<array>
+				<string>Prism Dark</string>
+				<string>One Dark Pro</string>
+				<string>Solarized Dark</string>
+				<string>Catppuccin Mocha</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<string>prism-dark</string>
+				<string>one-dark-pro</string>
+				<string>solarized-dark</string>
+				<string>catppuccin-mocha</string>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Inline ghost text</string>
+			<key>Key</key><string>ai_inline_suggest_enabled</string>
+			<key>DefaultValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Cmd-K inline chat</string>
+			<key>Key</key><string>ai_inline_chat_on_cmd_k</string>
+			<key>DefaultValue</key><true/>
+		</dict>
+
+		<!-- 5. Collaboration & Presence -->
+		<dict>
+			<key>Type</key><string>PSGroupSpecifier</string>
+			<key>Title</key><string>Collaboration &amp; Presence</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Enable collaboration</string>
+			<key>Key</key><string>collab_enabled</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Show live cursors</string>
+			<key>Key</key><string>collab_show_cursors</string>
+			<key>DefaultValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Show presence bar</string>
+			<key>Key</key><string>collab_show_status_bar</string>
+			<key>DefaultValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Auto-save on change</string>
+			<key>Key</key><string>collab_auto_save</string>
+			<key>DefaultValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSMultiValueSpecifier</string>
+			<key>Title</key><string>Conflict strategy</string>
+			<key>Key</key><string>collab_conflict_strategy</string>
+			<key>DefaultValue</key><string>ask</string>
+			<key>Titles</key>
+			<array>
+				<string>Ask</string>
+				<string>Merge</string>
+				<string>Mine</string>
+				<string>Theirs</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<string>ask</string>
+				<string>merge</string>
+				<string>mine</string>
+				<string>theirs</string>
+			</array>
+		</dict>
+
+		<!-- 6. Debugger -->
+		<dict>
+			<key>Type</key><string>PSGroupSpecifier</string>
+			<key>Title</key><string>Debugger</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Enable debugger</string>
+			<key>Key</key><string>debugger_enabled</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Stop on launch</string>
+			<key>Key</key><string>debugger_stop_on_entry</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Variables pane</string>
+			<key>Key</key><string>debugger_show_variables</string>
+			<key>DefaultValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Max children</string>
+			<key>Key</key><string>debugger_max_children</string>
+			<key>DefaultValue</key><string>100</string>
+			<key>KeyboardType</key><string>NumbersAndPunctuation</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Console font size</string>
+			<key>Key</key><string>debugger_console_font_size</string>
+			<key>DefaultValue</key><string>13</string>
+			<key>KeyboardType</key><string>NumbersAndPunctuation</string>
+		</dict>
+
+		<!-- 7. Git & VCS -->
+		<dict>
+			<key>Type</key><string>PSGroupSpecifier</string>
+			<key>Title</key><string>Git &amp; VCS</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Auto fetch</string>
+			<key>Key</key><string>git_auto_fetch</string>
+			<key>DefaultValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Auto pull on open</string>
+			<key>Key</key><string>git_auto_pull</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>GPG-sign commits</string>
+			<key>Key</key><string>git_commit_signing</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Default branch</string>
+			<key>Key</key><string>git_default_branch</string>
+			<key>DefaultValue</key><string>main</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>AI suggest commit msg</string>
+			<key>Key</key><string>ai_generate_commit_msg</string>
+			<key>DefaultValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>AI review PR diff</string>
+			<key>Key</key><string>ai_pr_review_enabled</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+
+		<!-- 8. Keybindings -->
+		<dict>
+			<key>Type</key><string>PSGroupSpecifier</string>
+			<key>Title</key><string>Keybindings</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Quick inline chat</string>
+			<key>Key</key><string>kb_quick_chat</string>
+			<key>DefaultValue</key><string>⌘K</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Run tests</string>
+			<key>Key</key><string>kb_run_tests</string>
+			<key>DefaultValue</key><string>⌘U</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Format file</string>
+			<key>Key</key><string>kb_format_file</string>
+			<key>DefaultValue</key><string>⌘⇧F</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>AI refactor</string>
+			<key>Key</key><string>kb_ai_refactor</string>
+			<key>DefaultValue</key><string>⌘⌥R</string>
+		</dict>
+
+		<!-- 9. Privacy / Telemetry -->
+		<dict>
+			<key>Type</key><string>PSGroupSpecifier</string>
+			<key>Title</key><string>Privacy / Telemetry</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Share anonymous usage</string>
+			<key>Key</key><string>telemetry_enabled</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Send crash logs</string>
+			<key>Key</key><string>crash_reports_enabled</string>
+			<key>DefaultValue</key><true/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Sync history to iCloud</string>
+			<key>Key</key><string>ai_prompt_history_cloud</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+
+		<!-- 10. Developer / Debug -->
+		<dict>
+			<key>Type</key><string>PSGroupSpecifier</string>
+			<key>Title</key><string>Developer / Debug</string>
+			<key>FooterText</key><string>Advanced options. Use with caution.</string>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSMultiValueSpecifier</string>
+			<key>Title</key><string>Log level</string>
+			<key>Key</key><string>dbg_log_level</string>
+			<key>DefaultValue</key><string>info</string>
+			<key>Titles</key>
+			<array>
+				<string>Debug</string>
+				<string>Info</string>
+				<string>Warn</string>
+				<string>Error</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<string>debug</string>
+				<string>info</string>
+				<string>warn</string>
+				<string>error</string>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Use fake AI responses</string>
+			<key>Key</key><string>dbg_mock_ai</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Ignore shell whitelist</string>
+			<key>Key</key><string>dbg_bypass_shell_checks</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSToggleSwitchSpecifier</string>
+			<key>Title</key><string>Show token overlay</string>
+			<key>Key</key><string>dbg_show_tokens</string>
+			<key>DefaultValue</key><false/>
+		</dict>
+		<dict>
+			<key>Type</key><string>PSTextFieldSpecifier</string>
+			<key>Title</key><string>Artificial delay (ms)</string>
+			<key>Key</key><string>dbg_slow_requests</string>
+			<key>DefaultValue</key><string>0</string>
+			<key>KeyboardType</key><string>NumbersAndPunctuation</string>
+		</dict>
+	</array>
+</dict>
+</plist>
