@@ -6,7 +6,6 @@ AI-powered IDE with chat, tool-calls, subscriptions, and Firebase Auth.
 - Add GoogleService-Info.plist to the iOS app target.
 - In CodeApp/Info.plist, set:
   - PRISM_BACKEND_URL = https://your-backend.example.com
-  - OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY (optional if you inject elsewhere)
   - CFBundleURLTypes -> $(GOOGLE_REVERSED_CLIENT_ID) from your GoogleService-Info.plist
 - Deploy backend/functions (Firebase Functions) with env:
   - STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_PRO, STRIPE_PRICE_TEAM
@@ -41,18 +40,6 @@ This repository contains the source code of the app. We also work on issues, lis
 
 See [code.thebaselab.com](https://code.thebaselab.com)
 
-## The Plan
-
-Use [VS Code](https://github.com/microsoft/vscode) as a design template while providing key functionalities with [monaco-editor](https://github.com/microsoft/monaco-editor) and native code:
-
-- Version Control (Git clone, commits, diff editor, push, pull and gutter indicator) ✅
-- Embeded terminal (70+ commands avaliable) ✅
-- Local web development environment (Node + PHP) ✅
-- Built in Python runtime ✅
-- C/C++ Runtime with WebAssembly (with clang) ✅
-- Local Java (OpenJDK) ✅
-- SSH Support ✅
-- [LSP](https://microsoft.github.io/language-server-protocol) support (Python, Java & F#) ✅ 
 
 ## Building the project
 
