@@ -84,6 +84,9 @@ export const createCheckoutSession = functions.https.onRequest(async (req, res) 
     const uid = decoded.uid;
 
     const { plan } = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    if (plan !== "pro" && plan !== "team") {
+      return res.status(400).send("Invalid plan specified");
+    }
     const priceId = plan === "team" ? process.env.STRIPE_PRICE_TEAM : process.env.STRIPE_PRICE_PRO;
     if (!priceId) return res.status(500).send("Server price not configured");
 
@@ -115,6 +118,39 @@ export const createCheckoutSession = functions.https.onRequest(async (req, res) 
     res.json({ url: session.url });
   } catch (err: any) {
     functions.logger.error("createCheckoutSession error", err);
+    res.status(500).send("Internal error");
+  }
+});
+
+export const getAIProviderConfig = functions.https.onRequest(async (req, res) => {
+  try {
+    if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
+    const auth = req.headers.authorization || "";
+    const token = auth.startsWith("Bearer ") ? auth.substring(7) : null;
+    if (!token) return res.status(401).send("Missing Authorization");
+    await admin.auth().verifyIdToken(token);
+
+    const { provider } = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    let apiKey: string | undefined;
+
+    switch (provider) {
+      case "openai":
+        apiKey = process.env.OPENAI_API_KEY;
+        break;
+      case "google":
+        apiKey = process.env.GOOGLE_API_KEY;
+        break;
+      case "anthropic":
+        apiKey = process.env.ANTHROPIC_API_KEY;
+        break;
+      default:
+        return res.status(400).send("Invalid provider specified");
+    }
+
+    if (!apiKey) return res.status(500).send("API key not configured for this provider");
+    res.json({ apiKey });
+  } catch (err: any) {
+    functions.logger.error("getAIProviderConfig error", err);
     res.status(500).send("Internal error");
   }
 });
