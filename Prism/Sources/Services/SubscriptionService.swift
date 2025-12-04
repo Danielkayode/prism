@@ -26,7 +26,7 @@ public final class SubscriptionService: ObservableObject {
         }
     }
     
-    public func subscribe(plan: SubscriptionPlan = .pro) {
+    public func subscribe(subscriptionPlan: SubscriptionPlan = .pro) {
         guard let user = Auth.auth().currentUser else { return }
         user.getIDToken { idToken, _ in
             guard let idToken = idToken else { return }
@@ -36,7 +36,7 @@ public final class SubscriptionService: ObservableObject {
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
-            request.httpBody = try? JSONSerialization.data(withJSONObject: ["plan": plan.rawValue])
+            request.httpBody = try? JSONSerialization.data(withJSONObject: ["plan": subscriptionPlan.rawValue])
             
             let task = URLSession.shared.dataTask(with: request) { data, _, _ in
                 guard let data = data,

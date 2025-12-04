@@ -84,6 +84,9 @@ export const createCheckoutSession = functions.https.onRequest(async (req, res) 
     const uid = decoded.uid;
 
     const { plan } = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    if (plan !== "pro" && plan !== "team") {
+      return res.status(400).send("Invalid plan specified");
+    }
     const priceId = plan === "team" ? process.env.STRIPE_PRICE_TEAM : process.env.STRIPE_PRICE_PRO;
     if (!priceId) return res.status(500).send("Server price not configured");
 
