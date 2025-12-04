@@ -47,12 +47,11 @@ Use [VS Code](https://github.com/microsoft/vscode) as a design template while pr
 
 - Version Control (Git clone, commits, diff editor, push, pull and gutter indicator) ✅
 - Embeded terminal (70+ commands avaliable) ✅
-- Local web development environment (Node + PHP) ✅
-- Built in Python runtime ✅
 - C/C++ Runtime with WebAssembly (with clang) ✅
-- Local Java (OpenJDK) ✅
 - SSH Support ✅
 - [LSP](https://microsoft.github.io/language-server-protocol) support (Python, Java & F#) ✅ 
+
+**Note:** Several features listed in previous versions of this README (such as local runtimes for Python, Node, and Java) were mock implementations and have been removed. This is part of an ongoing effort to make the app more stable and production-ready by focusing on core, well-implemented features.
 
 ## Building the project
 
