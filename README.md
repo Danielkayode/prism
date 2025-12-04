@@ -56,6 +56,8 @@ Use [VS Code](https://github.com/microsoft/vscode) as a design template while pr
 
 ## Building the project
 
+**Note:** The security tools require the `gitleaks` command-line tool to be installed and available in your `PATH`.
+
 1. `git clone https://github.com/thebaselab/codeapp`
 2. `./downloadFrameworks.sh`
 3. Open Code.xcodeproj

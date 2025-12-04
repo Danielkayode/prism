@@ -120,12 +120,9 @@ public enum ToolID: String, Codable, CaseIterable {
     case cpuProfile = "cpu_profile"
     
     // Security Tools
-    case vulnScan = "vuln_scan"
     case secretsDetect = "secrets_detect"
     case dependencyAudit = "dependency_audit"
     case securityReport = "security_report"
-    case threatModel = "threat_model"
-    case accessAudit = "access_audit"
     
     // Collaboration Tools
     case activeUsers = "active_users"
