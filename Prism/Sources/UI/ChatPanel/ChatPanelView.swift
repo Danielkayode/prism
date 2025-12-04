@@ -174,41 +174,8 @@ public struct ChatPanelView: View {
     }
     
     private func chat(prompt: String) async {
-        guard let provider = await makeProvider(for: selectedModel) else {
-            await MainActor.run {
-                messages.append(ChatMessage(role: "assistant", content: "AI provider not configured. Please set API keys in Settings."))
-            }
-            return
-        }
-        let client = StreamingClient(provider: provider, tokenManager: tokenManager)
-        let history = messages.map { AIMessage(role: $0.role, content: $0.content) }
-        do {
-            var response = ""
-            let stream = try await client.chat(sessionID: sessionID, mode: selectedMode, messages: history + [AIMessage(role: "user", content: prompt)])
-            for try await chunk in stream {
-                response += chunk
-                let temp = ChatMessage(role: "assistant", content: response)
-                await MainActor.run {
-                    if let lastIndex = messages.lastIndex(where: { $0.role == "assistant" }) {
-                        messages[lastIndex] = temp
-                    } else {
-                        messages.append(temp)
-                    }
-                }
-            }
-            await MainActor.run {
-                tokenUsage = client.getUsage(sessionID: sessionID)
-            }
-        } catch {
-            await MainActor.run {
-                messages.append(ChatMessage(role: "assistant", content: "Error: \(error.localizedDescription)"))
-            }
-        }
-    }
-    
-    private func makeProvider(for model: AIModel) async -> AIProvider? {
         let providerName: String
-        switch model {
+        switch selectedModel {
         case .gpt5:
             providerName = "openai"
         case .gemini25Pro:
@@ -217,47 +184,36 @@ public struct ChatPanelView: View {
             providerName = "anthropic"
         }
 
-        if let key = apiKeys[providerName] {
-            return provider(for: model, with: key)
-        } else if let key = await fetchApiKey(for: providerName) {
-            apiKeys[providerName] = key
-            return provider(for: model, with: key)
-        }
-        return nil
-    }
+        let history = messages.map { AIMessage(role: $0.role, content: $0.content) }
+        let requestBody: [String: Any] = [
+            "messages": history + [AIMessage(role: "user", content: prompt)],
+            "model": selectedModel.rawValue,
+            "stream": true
+        ]
 
-    private func provider(for model: AIModel, with key: String) -> AIProvider? {
-        switch model {
-        case .gpt5:
-            return OpenAIProvider(apiKey: key)
-        case .gemini25Pro:
-            return GoogleVertexProvider(apiKey: key)
-        case .claudeOpus41:
-            return AnthropicProvider(apiKey: key, model: "claude-opus-4.1")
-        case .claudeSonnet45:
-            return ClaudeSonnetProvider(apiKey: key, model: "claude-sonnet-4.5")
-        }
-    }
-
-    private func fetchApiKey(for provider: String) async -> String? {
-        guard let user = Auth.auth().currentUser else { return nil }
         do {
-            let idToken = try await user.getIDToken()
-            guard let base = Bundle.main.infoDictionary?["PRISM_BACKEND_URL"] as? String,
-                  let url = URL(string: base + "/get-ai-provider-config") else { return nil }
-
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
-            request.httpBody = try? JSONSerialization.data(withJSONObject: ["provider": provider])
-
-            let (data, _) = try await URLSession.shared.data(for: request)
-            let config = try JSONDecoder().decode(AIProviderConfig.self, from: data)
-            return config.apiKey
+            let stream = try await AIService.shared.secureAICall(provider: providerName, body: requestBody)
+            var response = ""
+            for try await line in stream.lines {
+                if line.hasPrefix("data: "), let data = line.dropFirst(6).data(using: .utf8) {
+                    // This is a simplified parser for SSE. A real implementation would be more robust.
+                    if let chunk = String(data: data, encoding: .utf8) {
+                        response += chunk
+                        let temp = ChatMessage(role: "assistant", content: response)
+                        await MainActor.run {
+                            if let lastIndex = messages.lastIndex(where: { $0.role == "assistant" }) {
+                                messages[lastIndex] = temp
+                            } else {
+                                messages.append(temp)
+                            }
+                        }
+                    }
+                }
+            }
         } catch {
-            print("Error fetching API key: \(error)")
-            return nil
+            await MainActor.run {
+                messages.append(ChatMessage(role: "assistant", content: "Error: \(error.localizedDescription)"))
+            }
         }
     }
 }

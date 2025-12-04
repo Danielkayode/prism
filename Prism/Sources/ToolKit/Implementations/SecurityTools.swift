@@ -1,140 +1,219 @@
 import Foundation
 
-public struct VulnScanTool: ToolCallable {
-    public let toolID = ToolID.vulnScan
-    public let displayName = "Vulnerability Scan"
-    public let description = "Scan code for security vulnerabilities"
-    
-    public func execute(parameters: [String: Any]) async throws -> ToolResult {
-        let targetPath = parameters["targetPath"] as? String ?? "."
-        let includeLibraries = parameters["includeLibraries"] as? Bool ?? true
-        
-        // Mock vulnerability scanning
-        let vulnerabilities = [
-            "criticalVulns": "0",
-            "highVulns": "2",
-            "mediumVulns": "5",
-            "lowVulns": "12",
-            "librariesScanned": includeLibraries ? "34" : "0",
-            "totalFiles": "156"
-        ]
-        
-        return .success("Vulnerability scan completed for \(targetPath)", metadata: vulnerabilities)
-    }
-}
-
 public struct SecretsDetectTool: ToolCallable {
     public let toolID = ToolID.secretsDetect
     public let displayName = "Secrets Detection"
-    public let description = "Detect hardcoded secrets and API keys"
-    
+    public let description = "Detect hardcoded secrets and API keys using gitleaks"
+
     public func execute(parameters: [String: Any]) async throws -> ToolResult {
         let targetPath = parameters["targetPath"] as? String ?? "."
         let includeHistory = parameters["includeHistory"] as? Bool ?? false
-        
-        // Mock secrets detection
-        let secrets = [
-            "apiKeys": "3 potential matches",
-            "passwords": "1 hardcoded password",
-            "tokens": "2 JWT tokens",
-            "certificates": "0",
-            "filesScanned": "89",
-            "gitHistoryScanned": includeHistory ? "yes" : "no"
-        ]
-        
-        return .success("Secrets detection completed for \(targetPath)", metadata: secrets)
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = ["gitleaks", "detect", "-s", targetPath]
+        if includeHistory {
+            process.arguments?.append("--log-opts=--full-history")
+        }
+
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let output = String(data: data, encoding: .utf8) {
+                return .success("Gitleaks scan completed.", metadata: ["report": output])
+            } else {
+                return .failure("Failed to read gitleaks output.")
+            }
+        } catch {
+            return .failure("Failed to run gitleaks: \(error.localizedDescription)")
+        }
     }
 }
 
 public struct DependencyAuditTool: ToolCallable {
     public let toolID = ToolID.dependencyAudit
     public let displayName = "Dependency Audit"
-    public let description = "Audit dependencies for known vulnerabilities"
-    
+    public let description = "Audit dependencies for known vulnerabilities using Swift Package Manager"
+
     public func execute(parameters: [String: Any]) async throws -> ToolResult {
-        let packageFile = parameters["packageFile"] as? String ?? "Package.swift"
-        
-        // Mock dependency audit
-        let audit = [
-            "totalDependencies": "23",
-            "vulnerableDependencies": "2",
-            "criticalVulns": "0",
-            "highRiskVulns": "1", 
-            "moderateRiskVulns": "3",
-            "outdatedPackages": "5",
-            "auditDatabase": "updated 2 days ago"
-        ]
-        
-        return .success("Dependency audit completed for \(packageFile)", metadata: audit)
+        let packageDir = parameters["packageDir"] as? String ?? "."
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = ["swift", "package", "show-dependencies", "--outdated", "--package-path", packageDir]
+
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let output = String(data: data, encoding: .utf8) {
+                return .success("Swift package outdated check completed.", metadata: ["details": output])
+            } else {
+                return .failure("Failed to read swift package outdated check output.")
+            }
+        } catch {
+            return .failure("Failed to run swift package outdated check: \(error.localizedDescription)")
+        }
     }
 }
 
 public struct SecurityReportTool: ToolCallable {
     public let toolID = ToolID.securityReport
     public let displayName = "Security Report"
-    public let description = "Generate comprehensive security report"
-    
+    public let description = "Generate a summary security report"
+
     public func execute(parameters: [String: Any]) async throws -> ToolResult {
         let projectPath = parameters["projectPath"] as? String ?? "."
-        let format = parameters["format"] as? String ?? "pdf"
         
-        // Mock security report generation
-        let report = [
-            "securityScore": "8.2/10",
-            "vulnerabilities": "7 total",
-            "complianceChecks": "OWASP Top 10 - 9/10 passed",
-            "secretsFound": "6",
-            "dependencyRisk": "Medium",
-            "reportFormat": format,
-            "generatedAt": ISO8601DateFormatter().string(from: Date())
+        var reportItems: [String: Any] = [:]
+
+        do {
+            let secretsResult = try await SecretsDetectTool().execute(parameters: ["targetPath": projectPath])
+            if let secretsReport = secretsResult.getMetadata()?["report"] as? String {
+                reportItems["Secrets Detection"] = secretsReport
+            }
+        } catch {
+            reportItems["Secrets Detection"] = "Error: \(error.localizedDescription)"
+        }
+
+        do {
+            let auditResult = try await DependencyAuditTool().execute(parameters: ["packageDir": projectPath])
+            if let auditDetails = auditResult.getMetadata()?["details"] as? String {
+                reportItems["Dependency Audit"] = auditDetails
+            }
+        } catch {
+            reportItems["Dependency Audit"] = "Error: \(error.localizedDescription)"
+        }
+
+        let summary = "Security report generated for \(projectPath)."
+        return .success(summary, metadata: reportItems)
+    }
+}
+
+public struct VulnScanTool: ToolCallable {
+    public let toolID = ToolID.vulnScan
+    public let displayName = "Vulnerability Scan"
+    public let description = "Performs a basic static analysis scan for common vulnerability patterns."
+
+    public func execute(parameters: [String: Any]) async throws -> ToolResult {
+        let targetPath = parameters["targetPath"] as? String ?? "."
+
+        let patterns = [
+            "eval\\s*\\(": "Potential use of insecure `eval()` function.",
+            "\\.unsafe": "Potential use of unsafe Swift APIs.",
+            "Process\\s*\\(": "Direct process invocation, check for command injection vulnerabilities.",
+            "TODO.*SECURITY": "Unresolved security-related TODO comment found."
         ]
         
-        return .success("Security report generated in \(format) format for \(projectPath)", metadata: report)
+        var findings: [String: [String]] = [:]
+
+        for (pattern, description) in patterns {
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+            process.arguments = ["grep", "-r", "-n", pattern, targetPath]
+
+            let pipe = Pipe()
+            process.standardOutput = pipe
+
+            try process.run()
+            process.waitUntilExit()
+
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let output = String(data: data, encoding: .utf8), !output.isEmpty {
+                let lines = output.split(separator: "\n").map(String.init)
+                findings[description] = lines
+            }
+        }
+
+        let summary = "Vulnerability scan completed. Found \(findings.count) types of potential issues."
+        return .success(summary, metadata: ["findings": findings])
     }
+}
+
+fileprivate func findPattern(_ pattern: String, in path: String) async -> [String] {
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+    process.arguments = ["grep", "-r", "-n", pattern, path]
+
+    let pipe = Pipe()
+    process.standardOutput = pipe
+
+    do {
+        try process.run()
+        process.waitUntilExit()
+
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        if let output = String(data: data, encoding: .utf8), !output.isEmpty {
+            return output.split(separator: "\n").map(String.init)
+        }
+    } catch {
+        return ["Error executing grep: \(error.localizedDescription)"]
+    }
+
+    return []
 }
 
 public struct ThreatModelTool: ToolCallable {
     public let toolID = ToolID.threatModel
     public let displayName = "Threat Model"
-    public let description = "Generate threat model for application"
-    
+    public let description = "Generates a basic threat model by identifying entry points and data assets."
+
     public func execute(parameters: [String: Any]) async throws -> ToolResult {
-        let applicationName = parameters["applicationName"] as? String ?? "Current Application"
-        let architecture = parameters["architecture"] as? String ?? "mobile"
-        
-        // Mock threat modeling
-        let threats = [
-            "identifiedThreats": "12",
-            "highPriorityThreats": "3",
-            "mitigationStrategies": "9",
-            "attackSurface": "Mobile app, API, Database",
-            "riskLevel": "Medium",
-            "stride": "Spoofing: 2, Tampering: 3, Repudiation: 1, Information Disclosure: 2, DoS: 2, Elevation: 2"
+        let targetPath = parameters["targetPath"] as? String ?? "."
+
+        let entryPointPatterns = [
+            "functions.https.onRequest": "Cloud Function HTTP Entry Point"
         ]
         
-        return .success("Threat model generated for \(applicationName) (\(architecture))", metadata: threats)
+        let dataAssetPatterns = [
+            "db.collection\\(": "Firestore Database Collection"
+        ]
+        
+        var findings: [String: [String]] = [:]
+
+        for (pattern, description) in entryPointPatterns {
+            findings[description] = await findPattern(pattern, in: targetPath)
+        }
+
+        for (pattern, description) in dataAssetPatterns {
+            findings[description] = await findPattern(pattern, in: targetPath)
+        }
+
+        let summary = "Threat model generated. Identified \(findings.values.flatMap { $0 }.count) potential assets and entry points."
+        return .success(summary, metadata: ["findings": findings])
     }
 }
 
 public struct AccessAuditTool: ToolCallable {
     public let toolID = ToolID.accessAudit
     public let displayName = "Access Audit"
-    public let description = "Audit access controls and permissions"
-    
+    public let description = "Audits the codebase for access control enforcement."
+
     public func execute(parameters: [String: Any]) async throws -> ToolResult {
-        let scope = parameters["scope"] as? String ?? "application"
+        let targetPath = parameters["targetPath"] as? String ?? "."
         
-        // Mock access audit
-        let access = [
-            "usersAudited": "45",
-            "rolesMapped": "8",
-            "permissionConflicts": "2",
-            "overPrivilegedUsers": "3",
-            "inactiveUsers": "7",
-            "complianceStatus": "92% compliant",
-            "lastAudit": "2024-10-15"
+        let patterns = [
+            "admin.auth().verifyIdToken": "Firebase Auth ID Token Verification"
         ]
         
-        return .success("Access audit completed for \(scope)", metadata: access)
+        var findings: [String: [String]] = [:]
+
+        for (pattern, description) in patterns {
+            findings[description] = await findPattern(pattern, in: targetPath)
+        }
+
+        let summary = "Access audit completed. Found \(findings.values.flatMap { $0 }.count) access control enforcement points."
+        return .success(summary, metadata: ["findings": findings])
     }
 }
