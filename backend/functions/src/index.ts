@@ -122,7 +122,7 @@ export const createCheckoutSession = functions.https.onRequest(async (req, res) 
   }
 });
 
-export const getAIProviderConfig = functions.https.onRequest(async (req, res) => {
+export const secureAICall = functions.https.onRequest(async (req, res) => {
   try {
     if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
     const auth = req.headers.authorization || "";
@@ -130,27 +130,63 @@ export const getAIProviderConfig = functions.https.onRequest(async (req, res) =>
     if (!token) return res.status(401).send("Missing Authorization");
     await admin.auth().verifyIdToken(token);
 
-    const { provider } = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    const { provider, body } = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
     let apiKey: string | undefined;
+    let url: string | undefined;
 
     switch (provider) {
       case "openai":
         apiKey = process.env.OPENAI_API_KEY;
+        url = "https://api.openai.com/v1/chat/completions";
         break;
       case "google":
         apiKey = process.env.GOOGLE_API_KEY;
+        url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`;
         break;
       case "anthropic":
         apiKey = process.env.ANTHROPIC_API_KEY;
+        url = "https://api.anthropic.com/v1/messages";
         break;
       default:
         return res.status(400).send("Invalid provider specified");
     }
 
-    if (!apiKey) return res.status(500).send("API key not configured for this provider");
-    res.json({ apiKey });
+    if (!apiKey || !url) return res.status(500).send("API key or URL not configured for this provider");
+
+    const headers: { [key: string]: string } = {
+      "Content-Type": "application/json",
+    };
+
+    if (provider === "anthropic") {
+      headers["x-api-key"] = apiKey;
+    } else if (provider === "openai") {
+      headers["Authorization"] = `Bearer ${apiKey}`;
+    }
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify({ ...body, stream: true })
+    });
+
+    if (!response.body) {
+      throw new Error("No response body");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      res.write(decoder.decode(value));
+    }
+    res.end();
+
   } catch (err: any) {
-    functions.logger.error("getAIProviderConfig error", err);
+    functions.logger.error("secureAICall error", err);
     res.status(500).send("Internal error");
   }
 });

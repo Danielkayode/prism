@@ -25,7 +25,7 @@ public struct ChatPanelView: View {
     @State private var showContextDrawer: Bool = false
     @State private var tokenUsage: TokenManager.Usage = .init()
     @State private var showLimitModal: Bool = false
-    @State private var apiKeys: [String: String] = [:]
+    @State private var aiProvider: SecureAIProvider?
     
     private let sessionID = UUID().uuidString
     private var tokenManager = TokenManager()
@@ -144,6 +144,25 @@ public struct ChatPanelView: View {
             .padding()
             .frame(width: 420)
         }
+        .task {
+            await setupAIProvider()
+        }
+    }
+
+    private func setupAIProvider() async {
+        guard let backendURLString = Bundle.main.infoDictionary?["PRISM_BACKEND_URL"] as? String,
+              let backendURL = URL(string: backendURLString),
+              let user = Auth.auth().currentUser else {
+            // Handle error: backend URL not set or user not logged in
+            return
+        }
+
+        do {
+            let idToken = try await user.getIDToken()
+            self.aiProvider = SecureAIProvider(backendURL: backendURL, authToken: idToken)
+        } catch {
+            // Handle error: failed to get ID token
+        }
     }
     
     private func setupSubscriptions() {
@@ -174,17 +193,17 @@ public struct ChatPanelView: View {
     }
     
     private func chat(prompt: String) async {
-        guard let provider = await makeProvider(for: selectedModel) else {
+        guard let provider = aiProvider else {
             await MainActor.run {
-                messages.append(ChatMessage(role: "assistant", content: "AI provider not configured. Please set API keys in Settings."))
+                messages.append(ChatMessage(role: "assistant", content: "AI provider not configured."))
             }
             return
         }
-        let client = StreamingClient(provider: provider, tokenManager: tokenManager)
-        let history = messages.map { AIMessage(role: $0.role, content: $0.content) }
+
+        let stream = provider.generateContent(prompt: prompt, model: selectedModel.rawValue)
+        var response = ""
+
         do {
-            var response = ""
-            let stream = try await client.chat(sessionID: sessionID, mode: selectedMode, messages: history + [AIMessage(role: "user", content: prompt)])
             for try await chunk in stream {
                 response += chunk
                 let temp = ChatMessage(role: "assistant", content: response)
@@ -196,9 +215,6 @@ public struct ChatPanelView: View {
                     }
                 }
             }
-            await MainActor.run {
-                tokenUsage = client.getUsage(sessionID: sessionID)
-            }
         } catch {
             await MainActor.run {
                 messages.append(ChatMessage(role: "assistant", content: "Error: \(error.localizedDescription)"))
@@ -207,58 +223,7 @@ public struct ChatPanelView: View {
     }
     
     private func makeProvider(for model: AIModel) async -> AIProvider? {
-        let providerName: String
-        switch model {
-        case .gpt5:
-            providerName = "openai"
-        case .gemini25Pro:
-            providerName = "google"
-        case .claudeOpus41, .claudeSonnet45:
-            providerName = "anthropic"
-        }
-
-        if let key = apiKeys[providerName] {
-            return provider(for: model, with: key)
-        } else if let key = await fetchApiKey(for: providerName) {
-            apiKeys[providerName] = key
-            return provider(for: model, with: key)
-        }
-        return nil
-    }
-
-    private func provider(for model: AIModel, with key: String) -> AIProvider? {
-        switch model {
-        case .gpt5:
-            return OpenAIProvider(apiKey: key)
-        case .gemini25Pro:
-            return GoogleVertexProvider(apiKey: key)
-        case .claudeOpus41:
-            return AnthropicProvider(apiKey: key, model: "claude-opus-4.1")
-        case .claudeSonnet45:
-            return ClaudeSonnetProvider(apiKey: key, model: "claude-sonnet-4.5")
-        }
-    }
-
-    private func fetchApiKey(for provider: String) async -> String? {
-        guard let user = Auth.auth().currentUser else { return nil }
-        do {
-            let idToken = try await user.getIDToken()
-            guard let base = Bundle.main.infoDictionary?["PRISM_BACKEND_URL"] as? String,
-                  let url = URL(string: base + "/get-ai-provider-config") else { return nil }
-
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
-            request.httpBody = try? JSONSerialization.data(withJSONObject: ["provider": provider])
-
-            let (data, _) = try await URLSession.shared.data(for: request)
-            let config = try JSONDecoder().decode(AIProviderConfig.self, from: data)
-            return config.apiKey
-        } catch {
-            print("Error fetching API key: \(error)")
-            return nil
-        }
+        return aiProvider
     }
 }
 
